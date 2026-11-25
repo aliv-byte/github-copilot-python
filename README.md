@@ -68,3 +68,34 @@ python -m pytest
 ```
 
 All tests should pass before and after every change. The baseline test run is shown in `Screenshots/initial_tests.png`.
+
+## Features
+
+- Difficulty selector (Easy, Medium, Hard) that changes how many cells are prefilled
+- Every generated puzzle has exactly one solution
+- Locked prefilled cells and hinted cells
+- Live conflict highlighting for rows, columns and 3x3 squares
+- Check button that highlights incorrect entries
+- Hint button that fills and locks one correct cell
+- Timer, hints counter and a completion message
+- Top 10 fastest times (name, time, difficulty, hints) saved in localStorage
+- Dark mode toggle, alternating 3x3 square colors and a responsive layout
+
+## Run the App
+
+From the `starter` folder:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+Then open http://127.0.0.1:5000 in your browser.
+
+## Copilot Setup
+
+- `.github/copilot-instructions.md` guides Copilot's style, structure and standards.
+- The `Screenshots/` folder holds the prompts and responses for each milestone: testing setup, unique solutions, gameplay, Top 10 and localStorage, styling, and the bug fixes.
+
