@@ -1,6 +1,15 @@
 import pytest
 
 import sudoku_logic
+from app import CURRENT
+
+
+def make_solved_board():
+    """Build a deterministic complete Sudoku board for route tests."""
+    return [
+        [((row * 3 + row // 3 + col) % 9) + 1 for col in range(9)]
+        for row in range(9)
+    ]
 
 
 def test_home_route_returns_200(client):
@@ -40,6 +49,83 @@ def test_new_route_rejects_invalid_difficulty(client):
     assert response.get_json() == {
         "error": "Invalid difficulty. Choose easy, medium, hard."
     }
+
+
+def test_check_route_reports_incorrect_cells_and_completion(client):
+    solution = make_solved_board()
+    puzzle = [row.copy() for row in solution]
+    puzzle[0][0] = sudoku_logic.EMPTY
+    CURRENT["puzzle"] = puzzle
+    CURRENT["solution"] = solution
+
+    response = client.post("/check", json={"board": puzzle})
+
+    assert response.status_code == 200
+    assert response.get_json() == {"incorrect": [], "solved": False}
+
+    response = client.post("/check", json={"board": solution})
+
+    assert response.get_json() == {"incorrect": [], "solved": True}
+
+    completed_board = [row.copy() for row in solution]
+    completed_board[0][1] = 9
+    response = client.post("/check", json={"board": completed_board})
+
+    assert response.get_json() == {"incorrect": [[0, 1]], "solved": False}
+
+
+@pytest.mark.parametrize(
+    "board",
+    [
+        [],
+        [[0] * 9 for _ in range(8)],
+        [[0] * 9 for _ in range(8)] + [[0] * 8 + [10]],
+        [[0] * 9 for _ in range(8)] + [[0] * 8 + [True]],
+    ],
+)
+def test_check_route_rejects_invalid_boards(client, board):
+    CURRENT["solution"] = make_solved_board()
+
+    response = client.post("/check", json={"board": board})
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "Please submit a valid 9x9 Sudoku board."
+    }
+
+
+def test_check_route_requires_a_current_game(client):
+    CURRENT["solution"] = None
+
+    response = client.post("/check", json={"board": make_solved_board()})
+
+    assert response.status_code == 400
+    assert "No game in progress" in response.get_json()["error"]
+
+
+def test_hint_route_returns_only_one_correct_empty_cell(client):
+    solution = make_solved_board()
+    puzzle = [row.copy() for row in solution]
+    puzzle[0][0] = sudoku_logic.EMPTY
+    puzzle[0][1] = sudoku_logic.EMPTY
+    CURRENT["puzzle"] = puzzle
+    CURRENT["solution"] = solution
+
+    response = client.post("/hint", json={"board": puzzle})
+
+    assert response.status_code == 200
+    assert response.get_json() == {"row": 0, "col": 0, "value": solution[0][0]}
+
+
+def test_hint_route_reports_no_empty_cells(client):
+    solution = make_solved_board()
+    CURRENT["puzzle"] = [row.copy() for row in solution]
+    CURRENT["solution"] = solution
+
+    response = client.post("/hint", json={"board": solution})
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "There are no empty cells left to hint."}
 
 
 def test_count_solutions_rejects_conflicting_board():

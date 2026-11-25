@@ -48,6 +48,19 @@ h1 {
     background: #ffcdd2;
 }
 
+.sudoku-cell.conflict {
+    background: #ffcdd2;
+}
+
+.sudoku-cell.hinted {
+    background: #c8e6c9;
+    font-weight: bold;
+}
+
+.sudoku-cell.prefilled {
+    cursor: not-allowed;
+}
+
 .sudoku-cell:nth-child(3),
 .sudoku-cell:nth-child(6) {
     border-right: 3px solid #333;
