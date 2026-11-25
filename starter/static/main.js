@@ -23,6 +23,7 @@ function createBoardElement() {
       input.className = 'sudoku-cell';
       input.dataset.row = i;
       input.dataset.col = j;
+      input.setAttribute('aria-label', `Row ${i + 1}, column ${j + 1}`);
       rowDiv.appendChild(input);
     }
     boardDiv.appendChild(rowDiv);
@@ -54,7 +55,27 @@ function renderPuzzle(puz) {
 function showMessage(message, isError = true) {
   const msg = document.getElementById('message');
   msg.textContent = message;
-  msg.style.color = isError ? '#d32f2f' : '#388e3c';
+  msg.classList.toggle('message-success', !isError);
+  msg.classList.toggle('message-error', isError);
+}
+
+function updateThemeToggle(theme) {
+  const toggle = document.getElementById('theme-toggle');
+  const isDark = theme === 'dark';
+  toggle.textContent = isDark ? 'Light mode' : 'Dark mode';
+  toggle.setAttribute('aria-label', `Switch to ${isDark ? 'light' : 'dark'} mode`);
+  toggle.setAttribute('aria-pressed', String(isDark));
+}
+
+function toggleTheme() {
+  const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  updateThemeToggle(theme);
+  try {
+    window.localStorage.setItem('sudokuTheme', theme);
+  } catch {
+    showMessage('Theme changed, but your preference could not be saved.');
+  }
 }
 
 function updateTimer() {
@@ -258,8 +279,10 @@ function handleScoreSave(event) {
 }
 
 window.addEventListener('load', () => {
+  updateThemeToggle(document.documentElement.dataset.theme || 'light');
   renderScoreboard();
   document.getElementById('sudoku-board').addEventListener('input', handleCellInput);
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
   document.getElementById('new-game').addEventListener('click', newGame);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
   document.getElementById('get-hint').addEventListener('click', getHint);
