@@ -28,7 +28,7 @@ function renderPuzzle(puz) {
   for (let i = 0; i < SIZE; i++) {
     for (let j = 0; j < SIZE; j++) {
       const idx = i * SIZE + j;
-      const val = puzzle[i][j];
+      const val = puz[i][j];
       const inp = inputs[idx];
       inp.value = '';
       inp.readOnly = false;
@@ -130,7 +130,11 @@ function handleCellInput(event) {
   });
   updateConflicts();
 
-  if (input.value && readBoard().every((row) => row.every((value) => value !== 0))) {
+  checkIfComplete();
+}
+
+function checkIfComplete() {
+  if (readBoard().every((row) => row.every((value) => value !== 0))) {
     checkSolution();
   }
 }
@@ -178,9 +182,7 @@ async function getHint() {
     input.classList.add('hinted');
     updateConflicts();
     showMessage('A correct cell has been filled in and locked.', false);
-    if (readBoard().every((row) => row.every((value) => value !== 0))) {
-      await checkSolution();
-    }
+    checkIfComplete();
   } catch (error) {
     showMessage(error.message || 'Unable to get a hint.');
   }

@@ -86,10 +86,7 @@ def get_hint():
 
     for row in range(sudoku_logic.SIZE):
         for col in range(sudoku_logic.SIZE):
-            if (
-                CURRENT["puzzle"][row][col] == sudoku_logic.EMPTY
-                and board[row][col] == sudoku_logic.EMPTY
-            ):
+            if board[row][col] == sudoku_logic.EMPTY:
                 return jsonify(
                     {
                         "row": row,

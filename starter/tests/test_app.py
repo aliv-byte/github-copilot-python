@@ -117,6 +117,22 @@ def test_hint_route_returns_only_one_correct_empty_cell(client):
     assert response.get_json() == {"row": 0, "col": 0, "value": solution[0][0]}
 
 
+def test_hint_route_uses_submitted_board_to_find_empty_cell(client):
+    solution = make_solved_board()
+    puzzle = [row.copy() for row in solution]
+    puzzle[0][0] = sudoku_logic.EMPTY
+    CURRENT["puzzle"] = puzzle
+    CURRENT["solution"] = solution
+
+    board = [row.copy() for row in solution]
+    board[0][1] = sudoku_logic.EMPTY
+
+    response = client.post("/hint", json={"board": board})
+
+    assert response.status_code == 200
+    assert response.get_json() == {"row": 0, "col": 1, "value": solution[0][1]}
+
+
 def test_hint_route_reports_no_empty_cells(client):
     solution = make_solved_board()
     CURRENT["puzzle"] = [row.copy() for row in solution]
