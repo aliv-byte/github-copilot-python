@@ -1,5 +1,13 @@
 // Client-side rendering and interaction for the Flask-backed Sudoku
+import {formatTime, renderScoreboard, saveScore} from './scoreboard.js';
+
 const SIZE = 9;
+let timerStartedAt = null;
+let timerInterval = null;
+let hintsUsed = 0;
+let currentDifficulty = 'easy';
+let currentTimeSeconds = 0;
+let gameSolved = false;
 
 function createBoardElement() {
   const boardDiv = document.getElementById('sudoku-board');
@@ -45,8 +53,40 @@ function renderPuzzle(puz) {
 
 function showMessage(message, isError = true) {
   const msg = document.getElementById('message');
-  msg.innerText = message;
+  msg.textContent = message;
   msg.style.color = isError ? '#d32f2f' : '#388e3c';
+}
+
+function updateTimer() {
+  if (timerStartedAt === null) return;
+  currentTimeSeconds = Math.floor((Date.now() - timerStartedAt) / 1000);
+  document.getElementById('timer').textContent = formatTime(currentTimeSeconds);
+}
+
+function stopTimer() {
+  if (timerInterval !== null) {
+    window.clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  updateTimer();
+  timerStartedAt = null;
+}
+
+function resetGameStatus() {
+  stopTimer();
+  currentTimeSeconds = 0;
+  hintsUsed = 0;
+  gameSolved = false;
+  document.getElementById('timer').textContent = '00:00';
+  document.getElementById('hints-used').textContent = '0';
+  document.getElementById('score-form').hidden = true;
+  document.getElementById('player-name').value = '';
+}
+
+function startTimer() {
+  timerStartedAt = Date.now();
+  updateTimer();
+  timerInterval = window.setInterval(updateTimer, 250);
 }
 
 async function requestJson(url, options) {
@@ -65,12 +105,15 @@ async function requestJson(url, options) {
 
 async function newGame() {
   const difficulty = document.getElementById('difficulty').value;
+  resetGameStatus();
+  currentDifficulty = difficulty;
   try {
     const data = await requestJson(`/new?difficulty=${encodeURIComponent(difficulty)}`);
     if (!Array.isArray(data.puzzle) || data.puzzle.length !== SIZE) {
       throw new Error('The server returned an invalid puzzle. Please try again.');
     }
     renderPuzzle(data.puzzle);
+    startTimer();
     showMessage('', false);
   } catch (error) {
     showMessage(error.message || 'Unable to start a new game.');
@@ -140,6 +183,7 @@ function checkIfComplete() {
 }
 
 async function checkSolution() {
+  if (gameSolved) return;
   try {
     const data = await requestJson('/check', {
       method: 'POST',
@@ -153,7 +197,13 @@ async function checkSolution() {
     });
 
     if (data.solved) {
-      showMessage('Congratulations! You solved the puzzle!', false);
+      gameSolved = true;
+      stopTimer();
+      showMessage(
+        `Congratulations! You solved the puzzle in ${formatTime(currentTimeSeconds)} with ${hintsUsed} hints.`,
+        false
+      );
+      document.getElementById('score-form').hidden = false;
     } else if (data.incorrect.length) {
       showMessage('Some entries are incorrect. Check the highlighted cells.');
     } else {
@@ -180,6 +230,8 @@ async function getHint() {
     input.value = data.value;
     input.readOnly = true;
     input.classList.add('hinted');
+    hintsUsed += 1;
+    document.getElementById('hints-used').textContent = String(hintsUsed);
     updateConflicts();
     showMessage('A correct cell has been filled in and locked.', false);
     checkIfComplete();
@@ -188,10 +240,29 @@ async function getHint() {
   }
 }
 
+function handleScoreSave(event) {
+  event.preventDefault();
+  if (!gameSolved) return;
+
+  const result = saveScore({
+    name: document.getElementById('player-name').value,
+    time: currentTimeSeconds,
+    difficulty: currentDifficulty,
+    hints: hintsUsed
+  });
+  if (result.status === 'saved') {
+    renderScoreboard();
+    document.getElementById('score-form').hidden = true;
+  }
+  document.getElementById('scoreboard-message').textContent = result.message;
+}
+
 window.addEventListener('load', () => {
+  renderScoreboard();
   document.getElementById('sudoku-board').addEventListener('input', handleCellInput);
   document.getElementById('new-game').addEventListener('click', newGame);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
   document.getElementById('get-hint').addEventListener('click', getHint);
+  document.getElementById('score-form').addEventListener('submit', handleScoreSave);
   newGame();
 });

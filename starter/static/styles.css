@@ -75,6 +75,34 @@ h1 {
     margin: 20px auto;
 }
 
+.game-status p {
+    display: inline-block;
+    margin: 0 12px;
+}
+
+#score-form {
+    margin: 16px auto;
+}
+
+#score-form[hidden] {
+    display: none;
+}
+
+.scoreboard {
+    margin: 30px auto;
+}
+
+.scoreboard table {
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+.scoreboard th,
+.scoreboard td {
+    padding: 8px 12px;
+    border: 1px solid #bbb;
+}
+
 button {
     padding: 8px 18px;
     margin: 0 8px;
