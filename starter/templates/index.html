@@ -29,6 +29,24 @@
         aria-pressed="false"
       >Dark mode</button>
     </header>
+    <section
+      id="victory-banner"
+      class="victory-banner"
+      hidden
+      aria-labelledby="victory-heading"
+      aria-live="polite"
+    >
+      <h2 id="victory-heading">Congratulations!</h2>
+      <p>
+        Time taken: <span id="victory-time"></span>
+        &middot; Hints used: <span id="victory-hints"></span>
+      </p>
+      <form id="score-form" hidden>
+        <label for="player-name">Name for the scoreboard:</label>
+        <input id="player-name" name="name" type="text" maxlength="20" autocomplete="name">
+        <button type="submit">Save</button>
+      </form>
+    </section>
     <div id="sudoku-board" aria-label="Sudoku board"></div>
     <section class="game-status" aria-label="Game status">
       <p>Time: <span id="timer" aria-live="off">00:00</span></p>
@@ -45,11 +63,6 @@
       <button id="check-solution" type="button">Check</button>
       <button id="get-hint" type="button">Hint</button>
       <span id="message" role="status" aria-live="polite"></span>
-      <form id="score-form" hidden>
-        <label for="player-name">Name for the scoreboard:</label>
-        <input id="player-name" name="name" type="text" maxlength="20" autocomplete="name">
-        <button type="submit">Save</button>
-      </form>
     </div>
     <section class="scoreboard" aria-labelledby="scoreboard-heading">
       <h2 id="scoreboard-heading">Top 10 Scores</h2>

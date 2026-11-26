@@ -8,6 +8,7 @@ let hintsUsed = 0;
 let currentDifficulty = 'easy';
 let currentTimeSeconds = 0;
 let gameSolved = false;
+let boardRevision = 0;
 
 function createBoardElement() {
   const boardDiv = document.getElementById('sudoku-board');
@@ -95,11 +96,13 @@ function stopTimer() {
 
 function resetGameStatus() {
   stopTimer();
+  boardRevision += 1;
   currentTimeSeconds = 0;
   hintsUsed = 0;
   gameSolved = false;
   document.getElementById('timer').textContent = '00:00';
   document.getElementById('hints-used').textContent = '0';
+  document.getElementById('victory-banner').hidden = true;
   document.getElementById('score-form').hidden = true;
   document.getElementById('player-name').value = '';
 }
@@ -195,6 +198,7 @@ function updateConflicts() {
 function handleCellInput(event) {
   const input = event.target;
   if (!input.matches('.sudoku-cell') || input.readOnly) return;
+  boardRevision += 1;
 
   if (input.value && !/^[1-9]$/.test(input.value)) {
     input.value = '';
@@ -212,19 +216,22 @@ function handleCellInput(event) {
 }
 
 function checkIfComplete() {
-  if (readBoard().every((row) => row.every((value) => value !== 0))) {
-    checkSolution();
+  const board = readBoard();
+  if (board.every((row) => row.every((value) => value !== 0))) {
+    checkSolution(board, boardRevision);
   }
 }
 
-async function checkSolution() {
+async function checkSolution(board = readBoard(), revision = boardRevision) {
   if (gameSolved) return;
   try {
     const data = await requestJson('/check', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({board: readBoard()})
+      body: JSON.stringify({board})
     });
+    if (revision !== boardRevision || gameSolved) return;
+
     const inputs = document.querySelectorAll('#sudoku-board .sudoku-cell');
     inputs.forEach((input) => input.classList.remove('incorrect'));
     data.incorrect.forEach(([row, col]) => {
@@ -234,11 +241,11 @@ async function checkSolution() {
     if (data.solved) {
       gameSolved = true;
       stopTimer();
-      showMessage(
-        `Congratulations! You solved the puzzle in ${formatTime(currentTimeSeconds)} with ${hintsUsed} hints.`,
-        false
-      );
+      document.getElementById('victory-time').textContent = formatTime(currentTimeSeconds);
+      document.getElementById('victory-hints').textContent = String(hintsUsed);
+      document.getElementById('victory-banner').hidden = false;
       document.getElementById('score-form').hidden = false;
+      showMessage('', false);
     } else if (data.incorrect.length) {
       const count = data.incorrect.length;
       showMessage(
@@ -269,6 +276,7 @@ async function getHint() {
     input.value = data.value;
     input.readOnly = true;
     input.classList.add('hinted');
+    boardRevision += 1;
     hintsUsed += 1;
     document.getElementById('hints-used').textContent = String(hintsUsed);
     updateConflicts();

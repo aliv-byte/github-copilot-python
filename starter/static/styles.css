@@ -85,6 +85,25 @@ body {
     margin: 0 auto 1rem;
 }
 
+.victory-banner {
+    margin: 0 auto 1rem;
+    padding: 1rem;
+    border: 2px solid var(--success-text);
+    border-radius: 0.6rem;
+    background: var(--surface);
+    color: var(--success-text);
+    box-shadow: var(--shadow);
+}
+
+.victory-banner[hidden] {
+    display: none;
+}
+
+.victory-banner h2,
+.victory-banner p {
+    margin: 0 0 0.5rem;
+}
+
 h1 {
     margin: 0;
     font-size: clamp(1.6rem, 5vw, 2.25rem);
