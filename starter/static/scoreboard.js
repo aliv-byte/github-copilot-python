@@ -38,7 +38,7 @@ function readScores() {
   }
 }
 
-export function renderScoreboard() {
+export function renderScoreboard(highlightRank = null) {
   const {scores, error} = readScores();
   const tableBody = document.getElementById('scoreboard-body');
   const message = document.getElementById('scoreboard-message');
@@ -55,6 +55,12 @@ export function renderScoreboard() {
 
   scores.forEach((score, index) => {
     const row = tableBody.insertRow();
+    if (index + 1 === highlightRank) {
+      row.classList.add('scoreboard-new-entry');
+      window.setTimeout(() => {
+        row.classList.remove('scoreboard-new-entry');
+      }, 2500);
+    }
     [
       String(index + 1),
       score.name,
@@ -88,7 +94,7 @@ export function saveScore(score) {
   }
 
   if (scores.length === MAX_SCORES &&
-      newScore.time > scores[scores.length - 1].time) {
+      newScore.time >= scores[scores.length - 1].time) {
     return {status: 'not-qualified', message: 'Your time did not make the Top 10. Keep practicing!'};
   }
 
@@ -104,5 +110,9 @@ export function saveScore(score) {
     };
   }
 
-  return {status: 'saved', message: 'Your score was saved to the Top 10.'};
+  return {
+    status: 'saved',
+    message: 'Your score was saved to the Top 10.',
+    rank: updatedScores.indexOf(newScore) + 1
+  };
 }

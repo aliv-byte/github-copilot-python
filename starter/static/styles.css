@@ -330,6 +330,11 @@ input:focus-visible {
     background: var(--table-stripe);
 }
 
+.scoreboard tbody tr.scoreboard-new-entry {
+    outline: 3px solid var(--success-text);
+    outline-offset: -3px;
+}
+
 @media (max-width: 420px) {
     .page-header {
         justify-content: space-between;

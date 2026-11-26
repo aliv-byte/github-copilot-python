@@ -41,10 +41,11 @@
         Time taken: <span id="victory-time"></span>
         &middot; Hints used: <span id="victory-hints"></span>
       </p>
+      <p id="victory-save-message" role="status" aria-live="polite"></p>
       <form id="score-form" hidden>
         <label for="player-name">Name for the scoreboard:</label>
         <input id="player-name" name="name" type="text" maxlength="20" autocomplete="name">
-        <button type="submit">Save</button>
+        <button id="save-score" type="submit">Save</button>
       </form>
     </section>
     <div id="sudoku-board" aria-label="Sudoku board"></div>

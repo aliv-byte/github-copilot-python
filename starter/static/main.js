@@ -105,6 +105,9 @@ function resetGameStatus() {
   document.getElementById('victory-banner').hidden = true;
   document.getElementById('score-form').hidden = true;
   document.getElementById('player-name').value = '';
+  document.getElementById('player-name').disabled = false;
+  document.getElementById('save-score').disabled = false;
+  document.getElementById('victory-save-message').textContent = '';
 }
 
 function startTimer() {
@@ -289,7 +292,7 @@ async function getHint() {
 
 function handleScoreSave(event) {
   event.preventDefault();
-  if (!gameSolved) return;
+  if (!gameSolved || document.getElementById('save-score').disabled) return;
 
   const result = saveScore({
     name: document.getElementById('player-name').value,
@@ -298,10 +301,23 @@ function handleScoreSave(event) {
     hints: hintsUsed
   });
   if (result.status === 'saved') {
-    renderScoreboard();
-    document.getElementById('score-form').hidden = true;
+    document.getElementById('victory-save-message').textContent =
+      `Saved! You are rank #${result.rank} of 10`;
+    document.getElementById('player-name').disabled = true;
+    document.getElementById('save-score').disabled = true;
+    document.getElementById('scoreboard-message').textContent = '';
+    renderScoreboard(result.rank);
+    document.querySelector('.scoreboard').scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+  } else if (result.status === 'not-qualified') {
+    document.getElementById('victory-save-message').textContent =
+      "Your time didn't make the Top 10";
+    document.getElementById('scoreboard-message').textContent = '';
+  } else {
+    document.getElementById('scoreboard-message').textContent = result.message;
   }
-  document.getElementById('scoreboard-message').textContent = result.message;
 }
 
 window.addEventListener('load', () => {
