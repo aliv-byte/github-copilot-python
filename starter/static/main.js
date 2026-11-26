@@ -154,28 +154,42 @@ function readBoard() {
 function updateConflicts() {
   const inputs = document.querySelectorAll('#sudoku-board .sudoku-cell');
   inputs.forEach((input) => input.classList.remove('conflict'));
-
   const board = readBoard();
-  for (let row = 0; row < SIZE; row++) {
-    for (let col = 0; col < SIZE; col++) {
-      const value = board[row][col];
-      if (!value) continue;
+  const units = [];
 
-      const hasConflict = (otherRow, otherCol) =>
-        (otherRow !== row || otherCol !== col) &&
-        board[otherRow][otherCol] === value &&
-        (otherRow === row ||
-          otherCol === col ||
-          (Math.floor(otherRow / 3) === Math.floor(row / 3) &&
-            Math.floor(otherCol / 3) === Math.floor(col / 3)));
-
-      if (board.some((line, otherRow) =>
-        line.some((_, otherCol) => hasConflict(otherRow, otherCol))
-      )) {
-        inputs[row * SIZE + col].classList.add('conflict');
-      }
+  for (let index = 0; index < SIZE; index++) {
+    units.push(
+      Array.from({length: SIZE}, (_, offset) => index * SIZE + offset),
+      Array.from({length: SIZE}, (_, offset) => offset * SIZE + index)
+    );
+  }
+  for (let boxRow = 0; boxRow < SIZE; boxRow += 3) {
+    for (let boxCol = 0; boxCol < SIZE; boxCol += 3) {
+      units.push(
+        Array.from({length: SIZE}, (_, offset) =>
+          (boxRow + Math.floor(offset / 3)) * SIZE +
+          boxCol + offset % 3
+        )
+      );
     }
   }
+
+  units.forEach((unit) => {
+    const cellsByValue = new Map();
+    unit.forEach((index) => {
+      const value = board[Math.floor(index / SIZE)][index % SIZE];
+      if (!value) return;
+      const cells = cellsByValue.get(value) || [];
+      cells.push(index);
+      cellsByValue.set(value, cells);
+    });
+
+    cellsByValue.forEach((cells) => {
+      if (cells.length > 1) {
+        cells.forEach((index) => inputs[index].classList.add('conflict'));
+      }
+    });
+  });
 }
 
 function handleCellInput(event) {
@@ -226,9 +240,13 @@ async function checkSolution() {
       );
       document.getElementById('score-form').hidden = false;
     } else if (data.incorrect.length) {
-      showMessage('Some entries are incorrect. Check the highlighted cells.');
+      const count = data.incorrect.length;
+      showMessage(
+        `${count} incorrect cell${count === 1 ? '' : 's'}.`,
+        true
+      );
     } else {
-      showMessage('No mistakes so far. Keep going!', false);
+      showMessage('No mistakes so far.', false);
     }
   } catch (error) {
     showMessage(error.message || 'Unable to check the puzzle.');

@@ -55,6 +55,7 @@ def test_check_route_reports_incorrect_cells_and_completion(client):
     solution = make_solved_board()
     puzzle = [row.copy() for row in solution]
     puzzle[0][0] = sudoku_logic.EMPTY
+    puzzle[0][1] = sudoku_logic.EMPTY
     CURRENT["puzzle"] = puzzle
     CURRENT["solution"] = solution
 
@@ -72,6 +73,29 @@ def test_check_route_reports_incorrect_cells_and_completion(client):
     response = client.post("/check", json={"board": completed_board})
 
     assert response.get_json() == {"incorrect": [[0, 1]], "solved": False}
+
+
+def test_check_route_reports_every_incorrect_non_prefilled_cell(client):
+    solution = make_solved_board()
+    puzzle = [row.copy() for row in solution]
+    wrong_cells = [(row, col) for row in range(2) for col in range(5)]
+    for row, col in wrong_cells:
+        puzzle[row][col] = sudoku_logic.EMPTY
+    CURRENT["puzzle"] = puzzle
+    CURRENT["solution"] = solution
+
+    board = [row.copy() for row in puzzle]
+    for row, col in wrong_cells:
+        board[row][col] = solution[row][col] % sudoku_logic.SIZE + 1
+    board[8][8] = solution[8][8] % sudoku_logic.SIZE + 1
+
+    response = client.post("/check", json={"board": board})
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "incorrect": [list(cell) for cell in wrong_cells],
+        "solved": False,
+    }
 
 
 @pytest.mark.parametrize(

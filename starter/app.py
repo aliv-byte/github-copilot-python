@@ -62,9 +62,15 @@ def check_solution():
         return jsonify({"error": "Please submit a valid 9x9 Sudoku board."}), 400
 
     incorrect = []
+    puzzle = CURRENT.get('puzzle')
     for i in range(sudoku_logic.SIZE):
         for j in range(sudoku_logic.SIZE):
-            if board[i][j] != sudoku_logic.EMPTY and board[i][j] != solution[i][j]:
+            is_prefilled = puzzle is not None and puzzle[i][j] != sudoku_logic.EMPTY
+            if (
+                not is_prefilled
+                and board[i][j] != sudoku_logic.EMPTY
+                and board[i][j] != solution[i][j]
+            ):
                 incorrect.append([i, j])
 
     solved = all(
